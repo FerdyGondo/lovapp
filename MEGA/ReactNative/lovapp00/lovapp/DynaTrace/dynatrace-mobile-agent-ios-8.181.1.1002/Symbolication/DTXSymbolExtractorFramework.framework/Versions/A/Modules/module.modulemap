@@ -1,0 +1,6 @@
+framework module DTXSymbolExtractorFramework {
+  umbrella header "DTXSymbolExtractorFramework.h"
+
+  export *
+  module * { export * }
+}

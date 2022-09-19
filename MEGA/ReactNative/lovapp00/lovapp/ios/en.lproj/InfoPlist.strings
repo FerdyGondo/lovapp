@@ -1,0 +1,10 @@
+/* 
+  InfoPlist.strings
+  lovapp
+  Created by Ferdy Gondo on 10/21/21.
+*/
+"CFBundleDisplayName" = "Lovapp";
+"CFBundleName" = "Lovapp";
+"NSCameraUsageDescription" = "Enable Loveapp to access your camera to capture a picture and record a video.";
+"NSPhotoLibraryUsageDescription" = "Enable Loveapp to access your photo gallery to upload your photos";
+"NSPhotoLibraryAddUsageDescription" = "Enable Loveapp to access your camera roll to upload your photos and save one’s you have taken with the app";

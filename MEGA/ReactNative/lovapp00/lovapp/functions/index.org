@@ -1,0 +1,568 @@
+// // https://firebase.google.com/docs/functions/write-firebase-functions
+// exports.helloWorld = functions.https.onRequest((request, response) => {
+//   functions.logger.info('Hello logs!', {structuredData: true});
+//   response.send('Hello from Firebase!');
+// });
+
+/* eslint-disable prettier/prettier */
+//'use strict';
+const functions = require('firebase-functions');
+const admin 	= require('firebase-admin');
+const axios 	= require('axios');
+
+//admin.initializeApp(functions.config().firebase);
+admin.initializeApp();
+
+const otherDatabase = admin.initializeApp({
+        databaseURL: 'https://messaging-dev-49fa2-2ef66.firebaseio.com/',
+    }, 'otherDatabase');
+
+// exports.storePF = functions.https.onRequest(( request, response ) => {
+// 	console.log('storePF request.apiURL : ', request.apiURL);
+// 	console.log('storePF request.params : ', request.params);
+// 	axios.post(request.apiURL, request.params)
+// 		.then( (response) => {
+// 			console.log('storePF response.data : ', response.data);
+// 			// var contactList_ref = firebase_config.database().ref(`user/${userID}/contact_list/`);
+// 			var ref = admin.database(otherDatabase).ref(`/pf/`);
+// 			// ref.set();
+// 			ref.child(`${response.userID}`).set({
+// 						user_name			: response.userName,
+// 						lower_case_name 	: response.userName.toLowerCase(),
+// 						last_login 			: response.lastLogin,
+// 			});
+// 			return resolve(response.data)
+// 		})
+// 		.catch( (error) => {
+// 			console.log('storePF error : ', error)
+// 			return reject(error)
+// 		})
+//  });
+
+exports.callLoginAPI =  functions.https.onCall( (data) => {
+	// console.log('callLoginAPI context :::::::::::::::::::::::: ', context);
+	// console.log('callLoginAPI data :::::::::::::::::::::::: ', data);
+	// console.log('callLoginAPI data.obj.loginURL : ', data.obj.loginURL);
+	// console.log('callLoginAPI data.obj.params   : ', data.obj.params);
+	//return data.obj;
+	return new Promise( (resolve, reject) => {
+			axios.post(data.obj.loginURL, data.obj.params)
+				.then( (response) => {
+					// console.log('callLoginAPI response.data : ', response.data)
+					return resolve(response.data);
+				})
+				.catch( (error) => {
+					// console.log('callLoginAPI loginAPI error : ', error)
+					return reject(error);
+				})
+		})
+});
+
+/* 
+// Saves a message to the Firebase Realtime Database but sanitizes the text by removing swearwords.
+exports.callLoginAPI2 =  functions.https.onCall( (data) => {
+	// console.log('callLoginAPI context :::::::::::::::::::::::: ', context);
+	console.log('callLoginAPI data :::::::::::::::::::::::: ', data);
+	console.log('callLoginAPI data.obj.loginURL : ', data.obj.loginURL);
+	console.log('callLoginAPI data.obj.params   : ', data.obj.params);
+	//return data.obj;
+	try{
+		await axios.post(data.obj.loginURL, data.obj.params)
+		.then( (response) => {
+			console.log('callLoginAPI response : ', response.data);
+			// var result = response.data;
+			// console.log('callLoginAPI result : ', result);
+			return response.data;
+		})
+		.catch(e => {
+			console.log('callLoginAPI e : ', e);
+			return e;
+		})
+	}
+	catch (e){
+		console.log('callLoginAPI catch e : ', e);
+		return e;
+	}
+
+	//return data.obj;
+
+	return new Promise( (resolve, reject) => {
+		axios.post(data.obj.loginURL, data.obj.params)
+			.then( (response) => {
+				resolve(response)
+				console.log('callLoginAPI response : ', response.data)
+				//return response.data
+			})
+			.catch( (error) => {
+				reject(error)
+				console.log('callLoginAPI loginAPI error : ', error)
+				// return error
+				//loginUserFail(dispatch, axiosError.message);
+			})
+	})
+	fetchLoginUserAPI(data.obj)
+		.then( (response) => {
+			//resolve(response)
+			console.log('callLoginAPI response : ', response.data)
+			return response;
+		})
+		.catch( (error) => {
+			//reject(error)
+			console.log('callLoginAPI loginAPI error : ', error)
+			// return error
+			//loginUserFail(dispatch, axiosError.message);
+		})
+  }); */
+
+/* function fetchLoginUserAPI(object) {
+	return new Promise( (resolve, reject) => {
+		axios.post(object.loginURL, object.params)
+			.then( (response) => {
+				resolve(response)
+				console.log('fetchLoginUserAPI response : ', response.data)
+				return response
+			})
+			.catch( (error) => {
+				reject(error)
+				console.log('fetchLoginUserAPI loginAPI error : ', error)
+				// return error
+				//loginUserFail(dispatch, axiosError.message);
+			})
+	})
+} */
+
+/* async function  fetchLoginUserAPI(object) {
+    // The await keyword saves us from having to write a .then() block.
+	let response = await axios.post(object.loginURL, object.params)
+	console.log('fetchLoginUserAPI response : ', response.data)
+    // We return it just like in a regular synchronous function.
+    return response;
+} */
+
+/* const otherConfig = Object.assign({}, functions.config().firebase)
+otherConfig.databaseURL = 'https://messaging-dev-49fa2-2ef66.firebaseio.com/'
+const otherApp = admin.initializeApp(otherConfig, 'otherAppName') */
+//const logout_time_ref = admin.database(otherDatabase).ref('/logout_time');
+
+//This database triggered function will check for child nodes that are older than the cut-off time. Each child needs to have a timestamp attribute.
+
+ exports.disableUser = functions.https.onRequest(( request, response ) => {
+	 console.log('1a disableUser request.method : ', request.method);
+	 console.log('1b disableUser request.body.app_name : ', request.body.app_name);
+	 console.log('1b disableUser request.body.user_id : ', request.body.user_id);
+	 console.log('1d disableUser request.body.token : ', request.body.token);
+	 // Check for POST request
+	if(request.method !== 'POST'){
+		response.status(400).send('Please send a POST request');
+		return;
+	}
+	if (request.body.user_id === undefined || request.body.user_id === ''){
+		response.status(400).send('Missing parameter');
+		return;
+	}
+
+	admin.database(otherDatabase).ref(`_token`).once('value', (snapshot) => {
+		console.log('2a disableUser snapshot.val() : ', snapshot.val());
+        if(snapshot.val()){
+			snapshot.forEach( (childSnap) => {
+				console.log('2b disableUser childSnap.val() : ', childSnap.val());
+                if(childSnap.hasChild('app_name') && childSnap.hasChild('token') && childSnap.hasChild('status') ){
+                    if(childSnap.val().app_name === request.body.app_name && childSnap.val().token === request.body.token && childSnap.val().status === 1){	//request.body.app_name){
+						console.log('2b disableUser ALL PARAM PASSED : ');
+						var childExist;
+						admin.database(otherDatabase).ref(`user`).once('value', (snapshot) => {
+							childExist = snapshot.child(`${request.body.user_id}`).exists(); //true
+							 console.log('3a disableUser childExist : ', childExist);
+								if(childExist){
+									admin.database(otherDatabase).ref(`user/${request.body.user_id}/user_info`).update({
+										user_status : '0'    //disable user
+									})
+									.then( () => {
+										console.log('3b SUCCESS Disable user request.body.user_id ', request.body.user_id);
+										return response.send('SUCCESS Disable user ');
+									})
+									.catch( (err) => {
+										console.log('3c Failed Disable user err ', err);
+										return response.status(500).send('Failed Disable user err', err);
+									})
+								} else {
+									console.log('3d disableUser child NOT Exist : ', childExist);
+									return response.status(500).send('disableUser ID NOT exist');
+								}
+								console.log('3e disableUser childExist :: ', childExist);
+								return response.end;
+						})
+					} else {
+						return response.status(500).send('Failed Disable Wrong Param Sent');
+					}
+				} else {
+					return response.status(500).send('Missing firebase data');
+				}
+				return response.end;
+			})
+		}
+	})
+
+ });
+
+ exports.enableUser = functions.https.onRequest(( request, response ) => {
+	console.log('1a enableUser request.method : ', request.method);
+	console.log('1b enableUser request.body.app_name : ', request.body.app_name);
+	console.log('1b enableUser request.body.user_id : ', request.body.user_id);
+	console.log('1d enableUser request.body.token : ', request.body.token);
+	// Check for POST request
+   if(request.method !== 'POST'){
+		response.status(400).send('Please send a POST request');
+	   return;
+   }
+   if (request.body.user_id === undefined || request.body.user_id === ''){
+		response.status(400).send('Missing parameter');
+	   return;
+   }
+
+   admin.database(otherDatabase).ref(`_token`).once('value', (snapshot) => {
+	   console.log('2a enableUser snapshot.val() : ', snapshot.val());
+	   if(snapshot.val()){
+		   snapshot.forEach( (childSnap) => {
+			   console.log('2b enableUser childSnap.val() : ', childSnap.val());
+			   if(childSnap.hasChild('app_name') && childSnap.hasChild('token') && childSnap.hasChild('status') ){
+				   if(childSnap.val().app_name === request.body.app_name && childSnap.val().token === request.body.token && childSnap.val().status === 1){	//request.body.app_name){
+					   console.log('2b enableUser ALL PARAM PASSED : ');
+					   var childExist;
+					   admin.database(otherDatabase).ref(`user`).once('value', (snapshot) => {
+						   childExist = snapshot.child(`${request.body.user_id}`).exists(); //true
+							console.log('3a enableUser childExist : ', childExist);
+							   if(childExist){
+								   admin.database(otherDatabase).ref(`user/${request.body.user_id}/user_info`).update({
+									   user_status : '1'    //enable user
+								   })
+								   .then( () => {
+									   console.log('3b SUCCESS Enable user request.body.user_id ', request.body.user_id);
+									   return response.send('SUCCESS Enable user ');
+								   })
+								   .catch( (err) => {
+									   console.log('3c Failed Enable user err ', err);
+									   return response.status(500).send('Failed Disable user err', err);
+								   })
+							   } else {
+								   console.log('3d enableUser child NOT Exist : ', childExist);
+								   return response.status(500).send('enableUser ID NOT exist');
+							   }
+							   console.log('3e enableUser childExist :: ', childExist);
+							   return response.end;
+					   })
+				   } else {
+					   return response.status(500).send('Failed Enable Wrong Param Sent');
+				   }
+			   } else {
+				   return response.status(500).send('Missing firebase data');
+			   }
+			   return response.end;
+		   })
+	   }
+   })
+
+});
+
+ exports.removeDeviceToken = functions.https.onRequest(( request, response ) => {
+    admin.database(otherDatabase).ref('/user').once('value', (snapshot) => {
+        if(snapshot.val()){
+            snapshot.forEach( (childSnap) => {
+                //response.send('childSnap.key    : ', childSnap.key);
+                //response.send('childSnap.val()   : ', childSnap.val());
+                // if(childSnap.hasChild('user_info/test_flag' && childSnap.val().user_info.test_flag === '1') ){
+                if(childSnap.hasChild('user_info/test_flag')  ){
+                    if(childSnap.val().user_info.test_flag === '1'){
+                        //var adaRef = admin.database(otherDatabase).ref(`user/${childSnap.key}/device_info`);
+                        var deviceRef = admin.database(otherDatabase).ref(`/user/${childSnap.key}/device_info`);
+                        deviceRef.remove();
+                        // var deviceRef = 
+                        // admin.database(otherDatabase).ref(`user/${childSnap.key}`).update({ device_info : ''});
+                        // deviceRef.update({ device_info : ''});
+                        console.log('removeDeviceToken childSnap.key  :: ', childSnap.key);
+                        // response.send(`removeDeviceToken ${childSnap.key}`);
+                        //console.log('childSnap.val() : ', childSnap.val());
+                        //response.send(`Remove ${childSnap.key}`);
+
+                    }
+                }
+            })
+        }
+    })
+ });
+ 
+exports.removeUser = functions.https.onRequest(( request, response ) => {
+//exports.removeUser = functions.database.ref('/logout_time')
+ //   .onUpdate((event) => {
+    	// Cut off time. Child nodes older than this will be deleted.
+		//const CUT_OFF_TIME = 60 * 1000; // 7 * 24 Hours in milliseconds.
+		const CUT_OFF_TIME = 15 * 24 * 60 * 60 * 1000; // 7 * 24 Hours in milliseconds.
+		const now = Date.now();
+		const cutoff = now - CUT_OFF_TIME;
+		
+	     //admin.database(otherDatabase).ref(`/logout_time`).orderByValue().on('value', (snap) => {
+
+	     //const cutOffQuery = logout_time_ref.orderByValue().endAt(cutoff);
+		 //return cutOffQuery.on('value').then( (snapshot) => {
+	     //return logout_time_ref.orderByValue().once('value', (snapshot) => {
+	     admin.database(otherDatabase).ref('/logout_time').orderByValue().once('value', (snapshot) => {
+			console.log('snapshot.key   : ', snapshot.key, 'snapshot.val() : ', snapshot.val());
+			//console.log('snapshot.val() : ', snapshot.val());
+			if(snapshot.val()){
+				snapshot.forEach((childSnap) => {
+					console.log('childSnap.key   : ', childSnap.key);
+					console.log('childSnap.val() : ', childSnap.val());
+					console.log('childSnap cutoff   : ', cutoff);
+				
+					//snapshotToArray(snap).reverse().forEach(function(childSnap){
+					    //if ( childSnap.val() < (new Date() - (2*60*1000)) ) {
+					    if ( childSnap.val() < cutoff ) {
+							//response.send('User removed! :', childSnap.key);
+							console.log('childSnap.key found : ', childSnap.key, 'childSnap.val() : ', childSnap.val());
+							//console.log('childSnap.val() found : ', childSnap.val());
+						
+					    	//ref(`logout_time/${snap.key}`).remove();
+					    	var adaRef = admin.database(otherDatabase).ref(`logout_time/${childSnap.key}`);
+								adaRef.remove();
+								  //.then( () => {
+								  //  console.log('Remove succeeded.')
+								  //})
+								  //.catch((error)  => {
+								  //  console.log('Remove failed: ' + error.message)
+                                  //});
+                                  console.log('removeUser :',childSnap.key);
+								  //response.send(`removeUser ${childSnap.key}`);
+								    //response.send('removeUser');
+						// } else {
+						// 	console.log('NO User removed');
+						// 	response.send('NO user removed');
+						}
+				//})		//close snapshotToArray(snap).reverse()
+				})
+			} else {
+				console.log('Logout is empty');
+				response.send('Logout is empty');
+			}
+			//return null;
+	})	//close admin.database(otherDatabase).ref('/logout_time')
+				//response.send('Logout is empty');
+}); //close exports.removeUser
+
+
+//const _ = require('lodash');
+/*
+exports.notification = functions.database.ref('/messages/{room_id}/{fb_msg_id}')
+.onWrite(event => {
+	const room_id 	= event.params.room_id;
+  	const fb_msg_id = event.params.fb_msg_id;
+
+  // If un-follow we exit the function.
+  if (!event.data.val()) {
+    return console.log('no msg notification room_id : ', room_id, ' fb_msg_id : ', fb_msg_id);
+  }
+  console.log('notification room_id : ', room_id, ' fb_msg_id : ', fb_msg_id);
+
+// Get the list of device notification tokens.
+  //const getToUserId = admin.database(otherDatabase).ref(`/messages/${room_id}/${fb_msg_id}/text`).once('value');
+  //const getMsg 	= admin.database(otherDatabase).ref(`messages/${room_id}/${fb_msg_id}`).once('value');
+	//console.log('notification getToUserId : ', getToUserId);
+	//console.log('notification getMsg 	  : ', getMsg);
+  // Get the follower profile.
+  //const getToken = admin.auth().getUser(followerUid);
+//return admin.database(otherDatabase).ref(`messages/{room_id}/{fb_msg_id}/text`).once('value');
+	return admin.database(otherDatabase).ref(`messages/${room_id}/${fb_msg_id}`).once('value', (snapshot) => {
+				console.log('snapshot.key   : ', snapshot.key);
+				console.log('snapshot.val() : ', snapshot.val());
+				console.log('snapshot.val().to_user_id : ', snapshot.val().to_user_id);
+				console.log('snapshot.val().text : ', snapshot.val().text);
+				console.log('snapshot.val().user.name : ', snapshot.val().user.name);
+				console.log('snapshot.val().user.avatar : ', snapshot.val().user.avatar);
+				admin.database(otherDatabase).ref(`user/${snapshot.val().to_user_id}/device_info/device_token`).once('value', (childsnap) => {
+					console.log('childsnap.val() : ', childsnap.val());
+					const token = childsnap.val();
+									// Notification details.
+				    const payload = {
+				      notification: {
+				        title: `You have a new notification from ${snapshot.val().user.name}`,
+				        body: `${snapshot.val().text}`,
+				        icon: `${snapshot.val().user.avatar}`,
+				      },
+				    };
+
+					console.log(' payload ', payload);
+					console.log(' token ', token);
+					// Send notifications to all tokens.
+					return admin.messaging().sendToDevice(token, payload);
+				})
+				//.then( //() => {
+
+				//snapshot.forEach((childSnap) => {
+				//	console.log('childSnap.key   : ', childSnap.key);
+				//	console.log('childSnap.val() : ', childSnap.val());
+				//	console.log('childSnap cutoff   : ', cutoff);
+				//});
+				//})//)
+	//})
+	})
+});
+*/
+//return Promise.all([getToUserId, getMsg]).then((results) => {
+/*return Promise.all([getMsg]).then( (results) => {
+    //const toUserId = results[0];
+	console.log('notification results : ', results);
+    const msg = results[0];
+	//console.log('notification toUserId : ', toUserId);
+	//console.log('notification msg : ', msg);
+
+    // Listing all tokens.
+    const message = Object.keys(msg.val());
+	console.log('notification message : ', message);
+
+	return null;
+  });*/
+
+    /*return getMsg.then(snapshot => {
+        console.log('notification : ', _.values(snapshot.val())[0]);
+        const { text, to_user_id } = _.values(snapshot.val())[0];
+	console.log('notification text 		 : ', text);
+	console.log('notification to_user_id : ', to_user_id);
+
+
+        return null;
+    });*/
+
+/*exports.truncate = functions.database.ref('/chat/{messageid}').onWrite((event) => {
+  const parentRef = event.data.ref.parent;
+  return parentRef.once('value').then((snapshot) => {
+    if (snapshot.numChildren() >= MAX_LOG_COUNT) {
+      let childCount = 0;
+      const updates = {};
+      snapshot.forEach((child) => {
+        if (++childCount <= snapshot.numChildren() - MAX_LOG_COUNT) {
+          updates[child.key] = null;
+        }
+      });
+      // Update the parent. This effectively removes the extra children.
+      return parentRef.update(updates);
+    }
+    return null;
+  });
+});*/
+
+// ChatAppFirebaseFunctions/functions/index.js
+/*exports.sendNewMessageNotification = functions.database.ref('/messages').onWrite(event => {
+    const getValuePromise = admin.database(otherDatabase)
+                                 .ref('messages')
+                                 .orderByKey()
+                                 .limitToLast(1)
+                                 .once('value');
+
+    return getValuePromise.then(snapshot => {
+        console.log(_.values(snapshot.val())[0]);
+        const { text, author } = _.values(snapshot.val())[0];
+
+        const payload = {
+            notification: {
+                title: 'New msg',
+                body: text,
+                icon: author.avatar
+            }
+        };
+
+        return admin.messaging()
+                    .sendToTopic('secret-chatroom', payload);
+    });
+});*/
+
+/**
+ * Triggers when a user gets a new follower and sends a notification.
+ *
+ * Followers add a flag to `/followers/{followedUid}/{followerUid}`.
+ * Users save their device notification tokens to `/users/{followedUid}/notificationTokens/{notificationToken}`.
+ */
+
+/*exports.sendFollowerNotification = functions.database.ref('/followers/{followedUid}/{followerUid}').onWrite((event) => {
+  const followerUid = event.params.followerUid;
+  const followedUid = event.params.followedUid;
+  // If un-follow we exit the function.
+  if (!event.data.val()) {
+    return console.log('User ', followerUid, 'un-followed user', followedUid);
+  }
+  console.log('We have a new follower UID:', followerUid, 'for user:', followerUid);
+
+  // Get the list of device notification tokens.
+  const getDeviceTokensPromise = admin.database(otherDatabase).ref(`/users/${followedUid}/notificationTokens`).once('value');
+
+  // Get the follower profile.
+  const getFollowerProfilePromise = admin.auth().getUser(followerUid);
+
+  return Promise.all([getDeviceTokensPromise, getFollowerProfilePromise]).then((results) => {
+    const tokensSnapshot = results[0];
+    const follower = results[1];
+
+    // Check if there are any device tokens.
+    if (!tokensSnapshot.hasChildren()) {
+      return console.log('There are no notification tokens to send to.');
+    }
+    console.log('There are', tokensSnapshot.numChildren(), 'tokens to send notifications to.');
+    console.log('Fetched follower profile', follower);
+
+    // Notification details.
+    const payload = {
+      notification: {
+        title: 'You have a new follower!',
+        body: `${follower.displayName} is now following you.`,
+        icon: follower.photoURL,
+      },
+    };
+
+    // Listing all tokens.
+    const tokens = Object.keys(tokensSnapshot.val());
+
+    // Send notifications to all tokens.
+    return admin.messaging().sendToDevice(tokens, payload);
+  })
+
+  .then((response) => {
+	    // For each message check if there was an error.
+	    const tokensToRemove = [];
+	    response.results.forEach((result, index) => {
+		      const error = result.error;
+		      if (error) {
+			        console.error('Failure sending notification to', tokens[index], error);
+			        // Cleanup the tokens who are not registered anymore.
+			        if (error.code === 'messaging/invalid-registration-token' || error.code === 'messaging/registration-token-not-registered') {
+			          	tokensToRemove.push(tokensSnapshot.ref.child(tokens[index]).remove());
+			        }
+		      }
+	    });
+	    return Promise.all(tokensToRemove);
+  });
+});
+*/
+/*	      
+	      const ref = event.data.ref.parent; // reference to the items
+	      const now = Date.now();
+	      const cutoff = now - CUT_OFF_TIME;
+	      //const oldItemsQuery = ref.orderByChild('timestamp').endAt(cutoff);
+	      const oldItemsQuery = ref.orderByValue();
+	      return oldItemsQuery.once('value').then((snapshot) => {
+		        // create a map with all children that need to be removed
+		        const updates = {};
+		        snapshot.forEach((child) => {
+		          updates[child.key] = null;
+		        });
+		        // execute all updates in one go and return the result to end the function
+		        return ref.update(updates);
+	      });
+*/
+
+//const functions = require('firebase-functions');
+
+// // Create and Deploy Your First Cloud Functions
+// // https://firebase.google.com/docs/functions/write-firebase-functions
+//
+// exports.helloWorld = functions.https.onRequest((request, response) => {
+//  response.send('Hello from Firebase!');
+// });
+

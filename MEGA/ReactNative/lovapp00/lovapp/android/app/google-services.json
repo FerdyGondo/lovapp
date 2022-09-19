@@ -1,0 +1,119 @@
+{
+  "project_info": {
+    "project_number": "782276787914",
+    "firebase_url": "https://messaging-dev-49fa2.firebaseio.com",
+    "project_id": "messaging-dev-49fa2",
+    "storage_bucket": "messaging-dev-49fa2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782276787914:android:9c0166bf052f1196da7e33",
+        "android_client_info": {
+          "package_name": "com.chatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "782276787914-nj7vjlc95drqh49quanbo9tcppi2l0ku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDjCmv79EXoQa7mxPkhdJQDn4dLaVTdUk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "782276787914-nj7vjlc95drqh49quanbo9tcppi2l0ku.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "782276787914-2fgh8c0h9j2qfdmodcjjnpskdu3ori2u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.comharinfosystems.chatapp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782276787914:android:8928397e8c434799da7e33",
+        "android_client_info": {
+          "package_name": "com.lovapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "782276787914-nj7vjlc95drqh49quanbo9tcppi2l0ku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDjCmv79EXoQa7mxPkhdJQDn4dLaVTdUk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "782276787914-nj7vjlc95drqh49quanbo9tcppi2l0ku.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "782276787914-2fgh8c0h9j2qfdmodcjjnpskdu3ori2u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.comharinfosystems.chatapp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:782276787914:android:c03aafcb29607c24da7e33",
+        "android_client_info": {
+          "package_name": "com.test"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "782276787914-nj7vjlc95drqh49quanbo9tcppi2l0ku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDjCmv79EXoQa7mxPkhdJQDn4dLaVTdUk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "782276787914-nj7vjlc95drqh49quanbo9tcppi2l0ku.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "782276787914-2fgh8c0h9j2qfdmodcjjnpskdu3ori2u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.comharinfosystems.chatapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,260 @@
+/* eslint-disable prettier/prettier */
+const functions = require('firebase-functions');
+const admin 	= require('firebase-admin');
+const axios 	= require('axios');
+
+// https://firebase.google.com/docs/functions/write-firebase-functions
+exports.helloWorld = functions.https.onRequest((request, response) => {
+    functions.logger.info('Hello logs!', {structuredData: true});
+    response.send('Hello from Firebase!');
+  });
+
+//admin.initializeApp(functions.config().firebase);
+admin.initializeApp();
+
+const otherDatabase = admin.initializeApp({
+        databaseURL: 'https://messaging-dev-49fa2-2ef66.firebaseio.com/',
+    }, 'otherDatabase');
+
+// exports.storePF = functions.https.onRequest(( request, response ) => {
+// 	console.log('storePF request.apiURL : ', request.apiURL);
+// 	console.log('storePF request.params : ', request.params);
+// 	axios.post(request.apiURL, request.params)
+// 		.then( (response) => {
+// 			console.log('storePF response.data : ', response.data);
+// 			// var contactList_ref = firebase_config.database().ref(`user/${userID}/contact_list/`);
+// 			var ref = admin.database(otherDatabase).ref(`/pf/`);
+// 			// ref.set();
+// 			ref.child(`${response.userID}`).set({
+// 						user_name			: response.userName,
+// 						lower_case_name 	: response.userName.toLowerCase(),
+// 						last_login 			: response.lastLogin,
+// 			});
+// 			return resolve(response.data)
+// 		})
+// 		.catch( (error) => {
+// 			console.log('storePF error : ', error)
+// 			return reject(error)
+// 		})
+//  });
+
+exports.callLoginAPI =  functions.https.onCall( (data) => {
+	// console.log('callLoginAPI context :::::::::::::::::::::::: ', context);
+	// console.log('callLoginAPI data :::::::::::::::::::::::: ', data);
+	// console.log('callLoginAPI data.obj.loginURL : ', data.obj.loginURL);
+	// console.log('callLoginAPI data.obj.params   : ', data.obj.params);
+	//return data.obj;
+	return new Promise( (resolve, reject) => {
+			axios.post(data.obj.loginURL, data.obj.params)
+				.then( (response) => {
+					// console.log('callLoginAPI response.data : ', response.data)
+					return resolve(response.data);
+				})
+				.catch( (error) => {
+					// console.log('callLoginAPI loginAPI error : ', error)
+					return reject(error);
+				});
+		});
+});
+
+ exports.disableUser = functions.https.onRequest(( request, response ) => {
+	console.log('1a disableUser request.method : ', request.method);
+	console.log('1b disableUser request.body.app_name : ', request.body.app_name);
+	console.log('1b disableUser request.body.user_id : ', request.body.user_id);
+	console.log('1d disableUser request.body.token : ', request.body.token);
+	// Check for POST request
+	if (request.method !== 'POST'){
+		response.status(400).send('Please send a POST request');
+		return;
+	}
+	if (request.body.user_id === undefined || request.body.user_id === ''){
+		response.status(400).send('Missing parameter');
+		return;
+	}
+
+	admin.database(otherDatabase).ref('_token').once('value', (snapshot) => {
+		console.log('2a disableUser snapshot.val() : ', snapshot.val());
+        if (snapshot.val()){
+			snapshot.forEach( (childSnap) => {
+				console.log('2b disableUser childSnap.val() : ', childSnap.val());
+                if (childSnap.hasChild('app_name') && childSnap.hasChild('token') && childSnap.hasChild('status') ){
+                    if (childSnap.val().app_name === request.body.app_name && childSnap.val().token === request.body.token && childSnap.val().status === 1){	//request.body.app_name){
+						console.log('2b disableUser ALL PARAM PASSED : ');
+						var childExist;
+						admin.database(otherDatabase).ref('user').once('value', (snap) => {
+							childExist = snap.child(`${request.body.user_id}`).exists(); //true
+							    console.log('3a disableUser childExist : ', childExist);
+								if (childExist){
+									admin.database(otherDatabase).ref(`user/${request.body.user_id}/user_info`).update({
+										user_status : '0'    //disable user
+									})
+									.then( () => {
+										console.log('3b SUCCESS Disable user request.body.user_id ', request.body.user_id);
+										return response.send('SUCCESS Disable user ');
+									})
+									.catch( (err) => {
+										console.log('3c Failed Disable user err ', err);
+										return response.status(500).send('Failed Disable user err', err);
+									});
+								} else {
+									console.log('3d disableUser child NOT Exist : ', childExist);
+									return response.status(500).send('disableUser ID NOT exist');
+								}
+								console.log('3e disableUser childExist :: ', childExist);
+								return response.end;
+						})
+					} else {
+						return response.status(500).send('Failed Disable Wrong Param Sent');
+					}
+				} else {
+					return response.status(500).send('Missing firebase data');
+				}
+				return response.end;
+			})
+		}
+	})
+
+ });
+
+ exports.enableUser = functions.https.onRequest(( request, response ) => {
+	console.log('1a enableUser request.method : ', request.method);
+	console.log('1b enableUser request.body.app_name : ', request.body.app_name);
+	console.log('1b enableUser request.body.user_id : ', request.body.user_id);
+	console.log('1d enableUser request.body.token : ', request.body.token);
+	// Check for POST request
+   if (request.method !== 'POST'){
+		response.status(400).send('Please send a POST request');
+	   return;
+   }
+   if (request.body.user_id === undefined || request.body.user_id === ''){
+		response.status(400).send('Missing parameter');
+	   return;
+   }
+
+   admin.database(otherDatabase).ref(`_token`).once('value', (snapshot) => {
+	   console.log('2a enableUser snapshot.val() : ', snapshot.val());
+	   if (snapshot.val()){
+		   snapshot.forEach( (childSnap) => {
+			   console.log('2b enableUser childSnap.val() : ', childSnap.val());
+			   if (childSnap.hasChild('app_name') && childSnap.hasChild('token') && childSnap.hasChild('status') ){
+				   if (childSnap.val().app_name === request.body.app_name && childSnap.val().token === request.body.token && childSnap.val().status === 1){	//request.body.app_name){
+					   console.log('2b enableUser ALL PARAM PASSED : ');
+					   var childExist;
+					   admin.database(otherDatabase).ref(`user`).once('value', (snap) => {
+						   childExist = snap.child(`${request.body.user_id}`).exists(); //true
+							console.log('3a enableUser childExist : ', childExist);
+							   if (childExist){
+								   admin.database(otherDatabase).ref(`user/${request.body.user_id}/user_info`).update({
+									   user_status : '1'    //enable user
+								   })
+								   .then( () => {
+									   console.log('3b SUCCESS Enable user request.body.user_id ', request.body.user_id);
+									   return response.send('SUCCESS Enable user ');
+								   })
+								   .catch( (err) => {
+									   console.log('3c Failed Enable user err ', err);
+									   return response.status(500).send('Failed Disable user err', err);
+								   })
+							   } else {
+								   console.log('3d enableUser child NOT Exist : ', childExist);
+								   return response.status(500).send('enableUser ID NOT exist');
+							   }
+							   console.log('3e enableUser childExist :: ', childExist);
+							   return response.end;
+					   })
+				   } else {
+					   return response.status(500).send('Failed Enable Wrong Param Sent');
+				   }
+			   } else {
+				   return response.status(500).send('Missing firebase data');
+			   }
+			   return response.end;
+		   })
+	   }
+   })
+
+});
+
+ exports.removeDeviceToken = functions.https.onRequest(( request, response ) => {
+    admin.database(otherDatabase).ref('/user').once('value', (snapshot) => {
+        if (snapshot.val()){
+            snapshot.forEach( (childSnap) => {
+                //response.send('childSnap.key    : ', childSnap.key);
+                //response.send('childSnap.val()   : ', childSnap.val());
+                // if(childSnap.hasChild('user_info/test_flag' && childSnap.val().user_info.test_flag === '1') ){
+                if (childSnap.hasChild('user_info/test_flag')  ){
+                    if (childSnap.val().user_info.test_flag === '1'){
+                        //var adaRef = admin.database(otherDatabase).ref(`user/${childSnap.key}/device_info`);
+                        var deviceRef = admin.database(otherDatabase).ref(`/user/${childSnap.key}/device_info`);
+                        deviceRef.remove();
+                        // var deviceRef = 
+                        // admin.database(otherDatabase).ref(`user/${childSnap.key}`).update({ device_info : ''});
+                        // deviceRef.update({ device_info : ''});
+                        console.log('removeDeviceToken childSnap.key  :: ', childSnap.key);
+                        // response.send(`removeDeviceToken ${childSnap.key}`);
+                        //console.log('childSnap.val() : ', childSnap.val());
+                        //response.send(`Remove ${childSnap.key}`);
+
+                    }
+                }
+            })
+        }
+    })
+ });
+ 
+exports.removeUser = functions.https.onRequest(( request, response ) => {
+//exports.removeUser = functions.database.ref('/logout_time')
+ //   .onUpdate((event) => {
+    	// Cut off time. Child nodes older than this will be deleted.
+		//const CUT_OFF_TIME = 60 * 1000; // 7 * 24 Hours in milliseconds.
+		const CUT_OFF_TIME = 15 * 24 * 60 * 60 * 1000; // 7 * 24 Hours in milliseconds.
+		const now = Date.now();
+		const cutoff = now - CUT_OFF_TIME;
+		
+	     //admin.database(otherDatabase).ref(`/logout_time`).orderByValue().on('value', (snap) => {
+
+	     //const cutOffQuery = logout_time_ref.orderByValue().endAt(cutoff);
+		 //return cutOffQuery.on('value').then( (snapshot) => {
+	     //return logout_time_ref.orderByValue().once('value', (snapshot) => {
+	     admin.database(otherDatabase).ref('/logout_time').orderByValue().once('value', (snapshot) => {
+			console.log('snapshot.key   : ', snapshot.key, 'snapshot.val() : ', snapshot.val());
+			//console.log('snapshot.val() : ', snapshot.val());
+			if (snapshot.val()){
+				snapshot.forEach((childSnap) => {
+					console.log('childSnap.key   : ', childSnap.key);
+					console.log('childSnap.val() : ', childSnap.val());
+					console.log('childSnap cutoff   : ', cutoff);
+				
+					//snapshotToArray(snap).reverse().forEach(function(childSnap){
+					    //if ( childSnap.val() < (new Date() - (2*60*1000)) ) {
+					    if ( childSnap.val() < cutoff ) {
+							//response.send('User removed! :', childSnap.key);
+							console.log('childSnap.key found : ', childSnap.key, 'childSnap.val() : ', childSnap.val());
+							//console.log('childSnap.val() found : ', childSnap.val());
+						
+					    	//ref(`logout_time/${snap.key}`).remove();
+					    	var adaRef = admin.database(otherDatabase).ref(`logout_time/${childSnap.key}`);
+								adaRef.remove();
+								  //.then( () => {
+								  //  console.log('Remove succeeded.')
+								  //})
+								  //.catch((error)  => {
+								  //  console.log('Remove failed: ' + error.message)
+                                  //});
+                                  console.log('removeUser :',childSnap.key);
+								  //response.send(`removeUser ${childSnap.key}`);
+								    //response.send('removeUser');
+						// } else {
+						// 	console.log('NO User removed');
+						// 	response.send('NO user removed');
+						}
+				//})		//close snapshotToArray(snap).reverse()
+				})
+			} else {
+				console.log('Logout is empty');
+				response.send('Logout is empty');
+			}
+			//return null;
+	})	//close admin.database(otherDatabase).ref('/logout_time')
+				//response.send('Logout is empty');
+}); //close exports.removeUser

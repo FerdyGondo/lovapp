@@ -1,0 +1,96 @@
+apply plugin: 'com.android.library'
+apply plugin: 'jsonschema2pojo'
+apply from: 'maven-push.gradle'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.jsonschema2pojo:jsonschema2pojo-gradle-plugin:1.0.0-alpha2'
+    }
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion '30.0.0'
+
+    defaultConfig {
+        minSdkVersion 16  // Jelly Bean 4.1.x (basically Java 6)
+        targetSdkVersion 30
+        versionCode 22
+        versionName '1.1.0'
+
+        consumerProguardFiles 'proguard-rules.pro'
+    }
+
+    // This makes it slightly nicer to code (like diamond operator) but
+    // keep in mind that we are still writing for Java 6 (so no try-with
+    // resources).
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+    }
+
+    lintOptions {
+        abortOnError true
+        quiet true
+        textReport true
+        textOutput 'stdout'
+        disable 'InvalidPackage'  // See https://github.com/square/okio/issues/58
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.8.5'
+
+    implementation 'com.google.android.gms:play-services-location:17.1.0'
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:2.19.0'
+    testImplementation 'com.github.tomakehurst:wiremock:2.27.2'
+    testImplementation 'org.hamcrest:hamcrest-library:1.3'
+
+    androidTestImplementation 'androidx.annotation:annotation:1.1.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test:rules:1.3.0'
+    androidTestImplementation 'com.google.dexmaker:dexmaker:1.2'
+    androidTestImplementation 'com.google.dexmaker:dexmaker-mockito:1.2'
+    androidTestImplementation 'org.mockito:mockito-core:2.19.0'
+}
+
+jsonSchema2Pojo {
+    sourceType = 'yamlschema'
+    annotationStyle = 'gson'
+    includeAccessors = false
+    generateBuilders = true
+    useLongIntegers = true
+    propertyWordDelimiters = ['_'] as char[]
+
+    removeOldOutput = true
+    source = files('src/main/json')
+}
+
+task deleteJar(type: Delete) {
+    delete 'libs/logmanagementlib.jar'
+}
+
+task createJar(type: Copy) {
+    from('build/intermediates/bundles/release/')
+    into('libs/jars/')
+    include('classes.jar')
+    rename('classes.jar', 'logmanagementlib.jar')
+}
+
+createJar.dependsOn(deleteJar, build)

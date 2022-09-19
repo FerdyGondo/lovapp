@@ -1,0 +1,12 @@
+/* 
+  InfoPlist.strings
+  chatapp
+  Created by Ferdy Gondo on 5/9/19.
+  Copyright © 2019 Facebook. All rights reserved.
+ "NSCameraUsageDescription" = "Lovapp would like to use your camera";
+*/
+"CFBundleDisplayName" = "ラヴァップ";
+"CFBundleName" = "ラヴァップ";
+"NSCameraUsageDescription" = "ラヴァップがカメラロールにアクセスして写真をアップロードし、アプリで撮影した写真を保存できるようにします";
+"NSPhotoLibraryUsageDescription" = "ラヴァップがフォトギャラリーにアクセスして写真をアップロードできるようにします";
+"NSPhotoLibraryAddUsageDescription" = "ラヴァップがカメラロールにアクセスして写真をアップロードし、アプリで撮影した写真を保存できるようにします";

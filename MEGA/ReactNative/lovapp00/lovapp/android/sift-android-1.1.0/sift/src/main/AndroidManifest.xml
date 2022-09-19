@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="siftscience.android">
+    <!--
+        This permission is required to allow the application to send events to Sift.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        The following permissions are configurable.
+        Make sure to add them to your application's AndroidManifest.xml if
+        you want Sift to collect location data.
+
+        Sift will not request permissions that are not granted by the user
+        from your application.
+    -->
+    <!--
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    -->
+    <application />
+</manifest>
